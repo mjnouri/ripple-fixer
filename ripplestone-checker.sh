@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Amazon Linux 2
+
 # remember to add the following to /etc/crontab to run this every 5 minutes
 # */5 * * * * ec2-user /home/ec2-user/mark/website-checker/ripplestone-checker.sh
 
@@ -8,6 +10,9 @@
 
 # check user mail, which shows the resulting output of the commands from cron
 # sudo tail -30 /var/mail/root
+
+# Give EC2 SNS permission
+
 
 DATEANDTIME=$(date +%F" "%r" "%A)
 UPMESSAGE=$"Ripplestone is up."
