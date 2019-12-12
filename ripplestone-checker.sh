@@ -24,7 +24,6 @@ if grep -q 200 curl-result
 then
  echo $UPMESSAGE
  echo "$DATEANDTIME - $UPMESSAGE" >> log
- aws sns publish --topic-arn arn:aws:sns:us-east-1:123456:Me --message "$UPMESSAGE"
 else
  echo $DOWNMESSAGE
  echo "$DATEANDTIME - $DOWNMESSAGE" >> log
