@@ -21,12 +21,10 @@ curl -I "www.google.com" > /home/ec2-user/mark/website-checker/curl-result
 if grep -q 200 /home/ec2-user/mark/website-checker/curl-result
 then
  echo $UPMESSAGE
- echo "$DATEANDTIME - $UPMESSAGE" >> /home/ec2-user/mark/website-checker/log
- echo "-------------------------" >> /home/ec2-user/mark/website-checker/log
 else
  echo $DOWNMESSAGE
  echo "$DATEANDTIME - $DOWNMESSAGE" >> /home/ec2-user/mark/website-checker/log
- aws sns publish --topic-arn arn:aws:sns:us-east-1:123:Me --message "$DOWNMESSAGE"
+ aws sns publish --topic-arn arn:aws:sns:us-east-1:123:Me --message "$DOWNMESSAGE" >> /home/ec2-user/mark/website-checker/log
  ssh windowsUser@172.31.104.231 'C:\Scripts\RestartIIS-RunAsAdmin.bat' >> /home/ec2-user/mark/website-checker/log
- echo "-------------------------" >> /home/ec2-user/mark/website-checker/log
+ echo "----------------------------------------------" >> /home/ec2-user/mark/website-checker/log
 fi

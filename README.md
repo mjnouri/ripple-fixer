@@ -1,3 +1,5 @@
-Simple bash script for checking if a reporting system is up, sending results to a log file, and alerting users via AWS SNS if the reporting site is down.
+Bash script that checks if a web based reporting system is up. If it is down, the script will write the date, time, and a 'down' message, alert an engineer via AWS SNS, and SSH to the Windows reporting server via OpenSSH and run a script to repair services while writing everything to a log file.
 
-Plans to add remote script execution to the reporting server to restart services if they are down.
+Future plans - Check to see if the Windows service was actually restarted for confirmation.
+
+See the run-windows-commands-remotely-from-linux-with-openssh repo for a guide on how to set up, configure, and execute Windows commands or scripts remotely from a Linux box.
