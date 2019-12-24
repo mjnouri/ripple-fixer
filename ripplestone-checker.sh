@@ -10,9 +10,13 @@
 # sudo tail -30 /var/mail/root
 
 DATEANDTIME=$(date +%F" "%r" "%A)
-UPMESSAGE=$"Ripplestone is up."
-DOWNMESSAGE=$"Ripplestone was down and was reset."
 RIPPLEHOST=172.31.46.121
+
+UPMESSAGE=$"Ripplestone is up."
+SERVERUNAVAILABLE=$"Server is unavailable over SSH. Check the server."
+RIPPLEDOWN=$"Ripplestone is down."
+RIPPLERESTARTED=$"Ripplestone was restarted."
+RIPPLENOTRESTARTED=$"Ripplestone was NOT restarted. Check the service."
 
 echo $DATEANDTIME | tee -a /home/centos/website-checker/log
 echo "" | tee -a log
@@ -21,31 +25,37 @@ nc -z $RIPPLEHOST 22
 if [[ $? -eq 0 ]]
 then
   echo "Ripplestone server is reachable on SSH." | tee -a /home/centos/website-checker/log
+  echo "" | tee -a /home/centos/website-checker/log
 else
   echo "Ripplestone server is unreachable on SSH. Check status of server." | tee -a /home/centos/website-checker/log
+  aws sns publish --topic-arn arn:aws:sns:us-east-1:123:Me --message "$SERVERUNAVAILABLE" | tee -a /home/centos/website-checker/log
   echo "" | tee -a /home/centos/website-checker/log
   echo "--------------------------------------" | tee -a /home/centos/website-checker/log
   exit 1
 fi
 
-curl -I "www.google.com" | tee /home/centos/website-checker/curl-result
+# google.com generates a 301 error code. www.google.com generates a 200 ok code
+curl -I "google.com" | tee /home/centos/website-checker/curl-result 1> /dev/null
 
-if grep -q 200 /home/centos/website-checker/curl-result
+if grep -q "HTTP/1.1 200" /home/centos/website-checker/curl-result
 then
- echo $UPMESSAGE
- echo $UPMESSAGE | tee -a /home/centos/website-checker/log
+  echo $UPMESSAGE | tee -a /home/centos/website-checker/log
+  exit 0
 else
- echo $DOWNMESSAGE
- echo $DOWNMESSAGE | tee -a /home/centos/website-checker/log
- aws sns publish --topic-arn arn:aws:sns:us-east-1:123:Me --message "$DOWNMESSAGE" | tee -a /home/centos/website-checker/log
- ssh windowsUser@$RIPPLEHOST 'C:\Scripts\restart-spooler.bat' | tee -a /home/centos/website-checker/log | tee /home/centos/website-checker/output
- echo "----------------------------------------------" | tee -a /home/centos/website-checker/log
+  echo $RIPPLEDOWN | tee -a /home/centos/website-checker/log
+  ssh mnouri@$RIPPLEHOST 'C:\Scripts\restart-ripplestone.bat' | tee -a /home/centos/website-checker/log | tee /home/centos/website-checker/bat-script-output
 fi
 
-if grep -q "The Print Spooler service was started successfully." /home/centos/website-checker/curl-result
+if grep -q "The Print Spooler service was started successfully." /home/centos/website-checker/bat-script-output
 then
- echo "Message from script - Print Spooler was restarted" | tee -a /home/centos/website-checker/log
+  echo $RIPPLERESTARTED | tee -a /home/centos/website-checker/log
+  aws sns publish --topic-arn arn:aws:sns:us-east-1:123:Me --message "$RIPPLERESTARTED" | tee -a /home/centos/website-checker/log
+  echo "--------------------------------------" | tee -a /home/centos/website-checker/log
+  exit 0
 else
- echo "Message from script - Print Spooler was not restarted. Check the server" | tee -a /home/centos/website-checker/log
+  echo $RIPPLENOTRESTARTED | tee -a /home/centos/website-checker/log
+  aws sns publish --topic-arn arn:aws:sns:us-east-1:123:Me --message "$RIPPLENOTRESTARTED" | tee -a /home/centos/website-checker/log
+  echo "--------------------------------------" | tee -a /home/centos/website-checker/log
+  exit 1
 fi
 
